@@ -24,6 +24,9 @@ class MovingSpriteDataset(Dataset):
 
         return data_dict
 
+    def __len__(self):
+        return 100
+
 
 class MovingSpritesGenerator:
     """Base moving sprites data generator class."""
@@ -109,6 +112,20 @@ class DistractorTemplateMovingSpritesGenerator(TemplateMovingSpritesGenerator):
         assert self._spec.shapes_per_traj >= 2
         shape_idxs = np.asarray([self.SHAPES.index(self.AGENT), self.SHAPES.index(self.TARGET)])
         distractor_idxs = np.setdiff1d(np.arange(len(self.SHAPES)), shape_idxs)
+        if self._spec.shapes_per_traj > 2:
+            shape_idxs = np.concatenate((shape_idxs,
+                                         np.random.choice(distractor_idxs, size=self._spec.shapes_per_traj - 2)))
+        return shape_idxs
+
+class AgentTemplateMovingSpritesGenerator(TemplateMovingSpritesGenerator):
+    """Differentiates between agent, target and distractor shapes."""
+    AGENT = 'tri_right'
+
+    def _sample_shapes(self):
+        """Retrieves shapes for agent and target, samples randomly from other shapes for distractors."""
+        assert self._spec.shapes_per_traj == 1
+        shape_idxs = np.asarray([self.SHAPES.index(self.AGENT)])
+        #distractor_idxs = np.setdiff1d(np.arange(len(self.SHAPES)), shape_idxs)
         if self._spec.shapes_per_traj > 2:
             shape_idxs = np.concatenate((shape_idxs,
                                          np.random.choice(distractor_idxs, size=self._spec.shapes_per_traj - 2)))
