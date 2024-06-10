@@ -66,10 +66,10 @@ class TargetYReward(Reward):
     def __call__(self, trajectories, shapes):
         return trajectories[:, 1, 0]
 
-class DistReward(Reward):
-    """Returns reward proportional to the vertical position of the target. Assumes that target is the second object."""
-    NAME = 'L2_dist'
+class ActualReward(Reward):
+    """Returns environment reward."""
+    NAME = 'tru_reward'
 
     def __call__(self, trajectories, shapes):
-        return 1/(np.sqrt((trajectories[:, 1, 0] - trajectories[:, 1, 1])**2 + (trajectories[:, 1, 1] - trajectories[:, 1, 1])**2)+0.2)
+        return 1-(np.sqrt(((trajectories[:, 1, 0] - trajectories[:, 1, 1])**2 + (trajectories[:, 1, 1] - trajectories[:, 1, 1])**2)/2))
 

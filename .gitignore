@@ -3,3 +3,6 @@ __pycache__
 .idea
 *.egg-info
 model_weights
+scripts/wandb
+**/wandb/
+scripts/redundant

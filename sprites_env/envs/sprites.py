@@ -8,7 +8,7 @@ from sprites_datagen.utils.template_blender import TemplateBlender
 
 
 class SpritesEnv(gym.Env):
-    SHAPES = ['rectangle', 'circle', 'tri_right', 'tri_bottom', 'tri_left', 'tri_top']
+    SHAPES = ['rectangle', 'circle'] #, 'tri_right', 'tri_bottom', 'tri_left', 'tri_top']
 
     def __init__(self, follow=True, **kwarg):
         self.shapes = None
@@ -22,7 +22,7 @@ class SpritesEnv(gym.Env):
 
         self.follow = follow
         self.repel = not self.follow
-        self.max_speed = 0.05
+        self.max_speed = 0.1
         self.obj_size = 0.2
         self.resolution = 64
 
