@@ -183,8 +183,7 @@ if __name__ == "__main__":
                 treward+=reward
                 if terminations:
                     break
-            treward+= i
-            i+=3/500000
+            
             wandb.log({"reward": treward})
           
 

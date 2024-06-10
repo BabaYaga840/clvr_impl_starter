@@ -144,7 +144,7 @@ if __name__ == "__main__":
     values = torch.zeros((args.num_steps * args.num_plays)).to(device)
     new_iter = 1
 
-    if args.chk_point != None:
+    if args.chk_point != "":
         new_iter, _ = load_checkpoint(args.chk_point, agent, optimizer)
 
 
