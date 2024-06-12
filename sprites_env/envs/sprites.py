@@ -11,7 +11,7 @@ class SpritesEnv(gym.Env):
     SHAPES = ['rectangle', 'circle'] #, 'tri_right', 'tri_bottom', 'tri_left', 'tri_top']
 
     def __init__(self, follow=True, **kwarg):
-        self.shapes = None
+        self.shapes = ['tri_right']
 
         self.n_distractors = kwarg['n_distractors'] if kwarg else 1
         self.n_dim = self._n_dim = 2

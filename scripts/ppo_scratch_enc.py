@@ -21,7 +21,7 @@ class Args:
     track: bool = True
     wandb_project_name: str = "PPO_sprites"
     save_model: bool = True
-    device: str = "cpu"
+    device: str = "cuda:2"
     freeze_encoder: bool = False
 
     # Algorithm specific arguments
@@ -44,11 +44,8 @@ class Args:
 
     # to be filled in runtime
     batch_size: int = 0
-    """the batch size (computed in runtime)"""
     minibatch_size: int = 0
-    """the mini-batch size (computed in runtime)"""
     num_iterations: int = 0
-    """the number of iterations (computed in runtime)"""
 
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
@@ -126,7 +123,7 @@ if __name__ == "__main__":
     dones = torch.zeros((args.num_steps * args.num_plays)).to(device)
     values = torch.zeros((args.num_steps * args.num_plays)).to(device)
 
-    enc=recon.Encoder(args.neck)
+    enc=recon.Encoder(args.neck).to(device)
     encoder_weights = torch.load(args.checkpoint)
     enc.load_state_dict(encoder_weights)
 

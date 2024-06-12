@@ -37,11 +37,8 @@ class Args:
     max_grad_norm: float = 0.5
 
     batch_size: int = 0
-    """the batch size (computed in runtime)"""
     minibatch_size: int = 0
-    """the mini-batch size (computed in runtime)"""
     num_iterations: int = 0
-    """the number of iterations (computed in runtime)"""
 
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
@@ -186,15 +183,13 @@ if __name__ == "__main__":
                 if args.norm_adv:
                     mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
 
-                # Policy loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - args.clip_coef, 1 + args.clip_coef)
                 pg_loss = torch.max(pg_loss1, pg_loss2).mean()
                 
-                wandb.log({"ratio": ratio})
-                wandb.log({"approx_kl": approx_kl})
+                """wandb.log({"ratio": ratio})
+                wandb.log({"approx_kl": approx_kl})"""
 
-                # Value loss
                 newvalue = newvalue.view(-1)
                 
                 v_loss = 0.5 * ((newvalue - returns[mb_inds]) ** 2).mean()

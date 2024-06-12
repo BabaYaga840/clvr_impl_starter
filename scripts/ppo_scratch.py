@@ -20,12 +20,11 @@ class Args:
     track: bool = True
     wandb_project_name: str = "PPO_sprites"
     save_model: bool = True
-    device: str = "cpu"
+    device: str = "cuda:1"
     chk_point: str = ""
 
-    # Algorithm specific arguments
     env_id: str = "SpritesState-v0"
-    total_timesteps: int = 5000000
+    total_timesteps: int = 500000000
     learning_rate: float = 1e-3
     num_steps: int = 40
     num_plays: int = 128
@@ -35,17 +34,14 @@ class Args:
     update_epochs: int = 10
     norm_adv: bool = True
     clip_coef: float = 0.1
-    ent_coef: float = 0.001
+    ent_coef: float = 0.00
     vf_coef: float = 0.5
     max_grad_norm: float = 0.5
 
     # to be filled in runtime
     batch_size: int = 0
-    """the batch size (computed in runtime)"""
     minibatch_size: int = 0
-    """the mini-batch size (computed in runtime)"""
     num_iterations: int = 0
-    """the number of iterations (computed in runtime)"""
 
 def save_checkpoint(model, optimizer, epoch, loss, filepath):
     checkpoint = {
@@ -73,8 +69,9 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 
 
 class Agent(nn.Module):
-    def __init__(self, envs):
+    def __init__(self, envs, env_id):
         super().__init__()
+        self.env_id = env_id
         self.critic = nn.Sequential(
             layer_init(nn.Linear(np.array(envs.observation_space.shape).prod(), 64)),
             nn.Tanh(),
@@ -98,8 +95,12 @@ class Agent(nn.Module):
         return self.critic(x)
 
     def get_action_and_value(self, x, action=None):
-        #x=torch.reshape(x,(-1,6))
-        x=torch.reshape(x,(-1,4))
+        if env_id == "SpritesState-v1":
+            x=torch.reshape(x,(-1,6))
+        if env_id == "SpritesState-v2":
+            x=torch.reshape(x,(-1,8))
+        else:
+            x=torch.reshape(x,(-1,4))
         epsilon = 1e-6
         """action_mean = self.actor_mean(x)
         action_logstd = self.actor_logstd.expand_as(action_mean)
@@ -165,7 +166,6 @@ if __name__ == "__main__":
                 obs[play * args.num_steps + step] = next_obs
                 dones[play * args.num_steps + step] = next_done
 
-                # ALGO LOGIC: action logic
                 with torch.no_grad():
                     action, logprob, _, value = agent.get_action_and_value(next_obs)
                     action = 2 * action - 1
@@ -173,7 +173,6 @@ if __name__ == "__main__":
                 actions[play * args.num_steps + step] = action
                 logprobs[play * args.num_steps + step] = logprob
 
-                # TRY NOT TO MODIFY: execute the game and log data.
                 action=torch.clamp(action, -1,1)
                 next_obs, reward, terminations, _ = envs.step(action.cpu().numpy())
                 next_done = np.array(terminations)
@@ -181,14 +180,11 @@ if __name__ == "__main__":
                 next_obs = torch.Tensor(next_obs).to(device)
                 next_done = torch.Tensor(next_done).to(device)
                 treward+=reward
-                ntreward+=treward * 0.2 + ntreward * 0.8
+                #ntreward+=treward * 0.2 + ntreward * 0.8
                 if terminations:
                     break
             
-            treward += i
-            if i<0.5:
-                i+=1/500000
-            i+=4/1000000
+        
             
             wandb.log({"reward": treward})
           
@@ -234,7 +230,6 @@ if __name__ == "__main__":
                 if args.norm_adv:
                     mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
 
-                # Policy loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - args.clip_coef, 1 + args.clip_coef)
                 pg_loss = torch.max(pg_loss1, pg_loss2).mean()
@@ -242,7 +237,6 @@ if __name__ == "__main__":
                 wandb.log({"ratio": ratio})
                 wandb.log({"approx_kl": approx_kl})
 
-                # Value loss
                 newvalue = newvalue.view(-1)
                 
                 v_loss = ((newvalue - returns[mb_inds]) ** 2).mean()
@@ -260,7 +254,7 @@ if __name__ == "__main__":
                 save_checkpoint(agent, optimizer, iteration, loss, f"../checkpoints/chk_{treward}_{args.exp_name}")
                 x=x+1
             wandb.log({"policy_loss": tpg_loss})
-            wandb.log({"value_loss": tv_loss})
+            wandb.log({"value_loss": tv_loss)}
             wandb.log({"loss": tloss})
             wandb.log({"entropy_loss": ten_loss})
             nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
